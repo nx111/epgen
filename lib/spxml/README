@@ -1,0 +1,33 @@
+			 spxml README
+
+1.Introduction
+
+spxml is a simple and plain xml parser written in C++. spxml supports
+pull-model and DOM-model xml parsing.
+
+The spxml code was developed under Linux, but has also been tested under
+Solaris.
+
+You can get the code from the spxml home page:
+
+	http://code.google.com/p/spxml/
+
+2.Building
+
+To build libspxml.so, type
+
+$ make
+
+This will build all the targets include examples. You can run the
+example programs:
+
+$ testpull test.xml
+$ testdom test.xml
+
+
+Reports of successful use of spxml are appreciated.
+
+Enjoy!
+
+							-- stephen liu
+
