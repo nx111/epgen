@@ -720,6 +720,9 @@ int epg::saveepg_to_xmltv(eString epgfile)
 	fprintf(f,"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"\
 		  "<!DOCTYPE tv SYSTEM \"xmltv.dtd\">\n\n"\
 		  "<tv generator-info-name=\"opentv-xmltv 0.06\">\n");
+
+	map<uniqueEPGKey,__u16> xmltv_tsonid_id_map;
+
 	int no=1;
 	for(eventCache::iterator it=eventDB.begin();it!=eventDB.end();it++,no++){
 		timeMap *tmMap=&(it->second.second);
@@ -741,18 +744,24 @@ int epg::saveepg_to_xmltv(eString epgfile)
 		}
 		if(chname=="")
 			chname=chname.sprintf((char *)"%04X_%04X_%04X",it->first.sid,it->first.onid,it->first.tsid);
-	
+
+		xmltv_tsonid_id_map[it->first]=no;
+
 		fprintf(f,"   <channel id=\"%d\" tsonid=\"%d:%d:%d\">\n"\
 			  "        <display-name>%s</display-name>\n"\
 			  "   </channel>\n",no,it->first.sid,it->first.onid,it->first.tsid,chname.c_str());
 	}
-	no=1;
 	int cnt=0;
-	for(eventCache::iterator it=eventDB.begin();it!=eventDB.end();it++,no++){
+	for(eventCache::iterator it=eventDB.begin();it!=eventDB.end();it++){
 		timeMap *tmMap=&(it->second.second);
 		for(timeMap::iterator i=tmMap->begin();i!=tmMap->end();i++,cnt++){
 			const eit_event_struct* eit=i->second->get_v5();
 			EITEvent ev( eit, (it->first.tsid<<16)|it->first.onid, i->second->type,i->second->source);
+
+			map<uniqueEPGKey,__u16>::iterator itKeyNo=xmltv_tsonid_id_map.find(it->first);
+			if(itKeyNo == xmltv_tsonid_id_map.end())continue;
+
+			__u16 channelid=itKeyNo->second;
 
 			struct tm *pstart,*pend;
 			char tmp[256];
@@ -795,7 +804,7 @@ int epg::saveepg_to_xmltv(eString epgfile)
 			    }
 			desc=XML_ENCODE(desc.trim());
 			eString title=XML_ENCODE(ev.ShortEventName).trim();
-			fprintf(f,"   <programme channel=\"%d\" start=\"%s %s\" stop=\"%s %s\"",no,start_time.c_str(),tzs,end_time.c_str(),tzs);
+			fprintf(f,"   <programme channel=\"%d\" start=\"%s %s\" stop=\"%s %s\"",channelid,start_time.c_str(),tzs,end_time.c_str(),tzs);
 
 			if(debug)
 				fprintf(f," event_id=\"%d\" ",i->second->getEventID());
