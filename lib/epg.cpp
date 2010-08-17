@@ -815,6 +815,7 @@ int epg::saveepg_to_xmltv(eString epgfile)
 				  "   </programme>\n",title.c_str(),desc.c_str());
 		}
 	}
+	xmltv_tsonid_id_map.clear();
 	printf("[xmltv]%d programme writed!\n",cnt);
 	fprintf(f,"</tv>");
 	
