@@ -720,7 +720,7 @@ void EITEvent::init_EITEvent(const eit_event_struct *event, int tsidonid)
 		}
 		else 
 		{
-			printf("[descr->Tag] 0x%02x\n",descr->Tag());
+			printf("Invalid descriptor,Tag:0x%02x\n",descr->Tag());
 			delete descr;
 			break;
 		}

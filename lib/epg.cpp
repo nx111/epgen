@@ -254,10 +254,10 @@ int epg::loadepg(eString epgfile,int filetype)
 	return 0;
 }
 
-int epg::saveepg(eString epgfile,int targetMode)
+int epg::saveepg(eString epgfile,int targetMode,int bomMode)
 {
 	if(epgfile.find(".xml")!=string::npos || epgfile.find(".XML")!=string::npos)
-		return saveepg_to_xmltv(epgfile);
+		return saveepg_to_xmltv(epgfile,bomMode);
 	
 	FILE *f = fopen(epgfile.c_str(), "wb");
 	int cnt=0;
@@ -706,7 +706,7 @@ int epg::loadepg_from_xmltv(eString epgfile)
 	return 0;
 }
 
-int epg::saveepg_to_xmltv(eString epgfile)
+int epg::saveepg_to_xmltv(eString epgfile,int bomMode)
 {
 	FILE *f=fopen(epgfile.c_str(),"wt");
 	if(!f)return -1;
@@ -716,6 +716,9 @@ int epg::saveepg_to_xmltv(eString epgfile)
 		sprintf(tzs,"-%02d%02d",(int)timeoff/3600,(int)(timeoff %3600)/60);	
 	else
 		sprintf(tzs,"+%02d%02d",(int)-timeoff/3600,(int)-(timeoff % 3600)/60);
+
+	if(bomMode)
+		fprintf(f,"\xEF\xBB\xBF");
 
 	fprintf(f,"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"\
 		  "<!DOCTYPE tv SYSTEM \"xmltv.dtd\">\n\n"\

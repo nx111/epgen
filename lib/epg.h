@@ -28,13 +28,13 @@ class epg
 	int load_tvmap(eString mapfile);
 	int loadepg_from_event_struct(event_data_struct &eds);
 	int loadepg_from_xmltv(eString epgfile);
-	int saveepg_to_xmltv(eString epgfile);
+	int saveepg_to_xmltv(eString epgfile,int bomMode=0);
 public:
 	int debug;
 	epg();
 	~epg();
 	int loadepg(eString epgfile,int filetype=0);
-	int saveepg(eString epgfile,int targetMode=0);
+	int saveepg(eString epgfile,int targetMode=0,int bomMode=0);
 	int save_tvmap(eString mapfile);
 	int dispepg();
 };

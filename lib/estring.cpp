@@ -291,11 +291,15 @@ eString GB2312ToUTF8(const unsigned char *szIn, int len,int *pconvertedLen)
 	return eString(szOut,t);
 }
 
-eString UTF8ToGB2312(const unsigned char *szIn,int len)
+eString UTF8ToGB2312(const unsigned char *szIn,int slen)
 {
 	unsigned long code=0;
 	unsigned char temp[4096];
 	unsigned int j=0;
+	int len=slen;
+	if(!slen)
+		len=strlen((const char*)szIn);
+
 	for (int i=0; i < len; ++i)
 	{
 		if (!(szIn[i]&0x80)){ // normal ASCII
