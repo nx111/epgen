@@ -595,7 +595,7 @@ int epg::loadepg_from_xmltv(eString epgfile)
 		case SP_XmlNode::eDOCDECL:{
 			const char * encoding=((SP_XmlDocDeclNode*)node)->getEncoding();
 			if (strncasecmp(encoding, "gb2312",6) == 0 || strcasecmp(encoding, "gbk") == 0 || strcasecmp(encoding, "gb18030") == 0)
-				encode=GB2312_ENCODING;
+				encode=GB18030_ENCODING;
 			else if (strcasecmp(encoding, "big5") == 0)
 				encode=BIG5_ENCODING;
 			else if (strcasecmp(encoding,"UTF8") == 0 || strcasecmp(encoding,"UTF-8") == 0 )
@@ -844,17 +844,19 @@ int epg::dispepg()
 			eit_event_struct* eit=i->second->get_v5();
 //			if(debug)
 //				utils_dump("EITData:",(__u8 *)eit,getINT8(HILO(eit->descriptors_loop_length)) + EIT_LOOP_SIZE,1);
+//			if(total
 //			utils_dump("EITData:",(unsigned char *)i->second->EITdata,i->second->getSize(1),1);
 				
 			EITEvent ev( eit, (it->first.tsid<<16)|it->first.onid, i->second->type,i->second->source);
+
 #ifndef __WIN32__
 			eString ShortEventName=ev.ShortEventName;
 			eString ShortEventText=ev.ShortEventText;
 			eString ExtendedEventText=ev.ExtendedEventText;
 #else
-			eString ShortEventName=UTF8ToGB2312(ev.ShortEventName.c_str(),ev.ShortEventName.size());
-			eString ShortEventText=UTF8ToGB2312(ev.ShortEventText.c_str(),ev.ShortEventText.size());
-			eString ExtendedEventText=UTF8ToGB2312(ev.ExtendedEventText.c_str(),ev.ExtendedEventText.size());
+			eString ShortEventName=UTF8ToGB2312((const char *)ev.ShortEventName.c_str(),ev.ShortEventName.size());
+			eString ShortEventText=UTF8ToGB2312((const char *)ev.ShortEventText.c_str(),ev.ShortEventText.size());
+			eString ExtendedEventText=UTF8ToGB2312((const char *)ev.ExtendedEventText.c_str(),ev.ExtendedEventText.size());
 #endif
 
 			if(debug)

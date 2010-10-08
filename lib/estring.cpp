@@ -2,7 +2,7 @@
 #include <limits.h>
 #include <stdarg.h>
 #include <string.h>
-#include "gbk.h"
+#include "gb18030.h"
 #include "big5.h"
 #include "estring.h"
 
@@ -117,7 +117,7 @@ eString& eString::strReplace(const char* fstr, const eString& rstr,int encode)
 		}
 		break;
 	case BIG5_ENCODING:
-	case GB2312_ENCODING:
+	case GB18030_ENCODING:
 		while(index<length()){
 			if((fstrlen+index)<=length() && !strcmp(mid(index,fstrlen).c_str(),fstr)){
 				replace(index,fstrlen,rstr);
@@ -187,7 +187,7 @@ eString eString::mid(unsigned int index, unsigned int len,int encode) const
 		}
 		break;
 	case BIG5_ENCODING:
-	case GB2312_ENCODING:
+	case GB18030_ENCODING:
 		while(i<length()){
 			if((i+2)>=length())break;
 			unsigned char c1=at(i);
@@ -268,30 +268,29 @@ int UnicodeToUTF8(long c, char *out)
 }
 
 
-eString GB2312ToUTF8(const unsigned char *szIn, int len,int *pconvertedLen)
+eString GB18030ToUTF8(const unsigned char *szIn, int len,int *pconvertedLen)
 {
 	char szOut[len * 2];
 	unsigned long code=0;
 	int t=0,i=0;
-	for(;i<(len-1);i++){
-		if (szIn[i]>0x80 && szIn[i]<0xff && szIn[i+1]>=0x40 && szIn[i+1]<0xff)
-		{
-			gbk_mbtowc((ucs4_t*)(&code),(const unsigned char *)szIn+i,2);
-			int k=UnicodeToUTF8(code,szOut+t);
-			t+=k;
-			i++;
-			}
+	for(i=0; i < (len-1);){
+		int cl=0,k=0;
+
+		cl=gb18030_mbtowc((ucs4_t*)(&code),(const unsigned char *)szIn+i,len-i);
+		if(cl>0)
+			k=UnicodeToUTF8(code,szOut+t);
+		t+=k;
+		if(cl>0)
+			i+=cl;
 		else
-			szOut[t++]=szIn[i];
+			i++;
 	}
-  	if(i<len && szIn[i]<0x80 && szIn[i])
-		szOut[t++]=szIn[i++];
 	szOut[t]='\0';
 	if(pconvertedLen)*pconvertedLen=i;
 	return eString(szOut,t);
 }
 
-eString UTF8ToGB2312(const unsigned char *szIn,int slen)
+eString UTF8GB2312(const unsigned char *szIn,int slen)
 {
 	unsigned long code=0;
 	unsigned char temp[4096];
@@ -461,7 +460,7 @@ eString convertDVBUTF8(const unsigned char *data, int len, int table, int tsidon
 			break;
 		case 0x13:
 			++i;
-			encode=GB2312_ENCODING;
+			encode=GB18030_ENCODING;
 			break;
 		case 0x14:
 			++i;
@@ -582,8 +581,8 @@ eString convertDVBUTF8(const unsigned char *data, int len, int table, int tsidon
 		  return eString((char*)res, t);
 		  break;
         	}
-		case GB2312_ENCODING:
-			return GB2312ToUTF8((const unsigned char *)(data + i), len - i,pconvertedLen);
+		case GB18030_ENCODING:
+			return GB18030ToUTF8((const unsigned char *)(data + i), len - i,pconvertedLen);
 			break;
 		case BIG5_ENCODING:
 			return Big5ToUTF8((const unsigned char *)(data + i), len - i,pconvertedLen);
@@ -710,7 +709,7 @@ eString XML_ENCODE(eString &sin)
 	tmp=sin.strReplace("&","&amp;");
 	tmp=tmp.strReplace("<","&lt;");
 	tmp=tmp.strReplace(">","&gt;");
-	tmp=tmp.strReplace(" ","&nbsp;");
+//	tmp=tmp.strReplace(" ","&nbsp;");
 	return tmp;	
 }
 

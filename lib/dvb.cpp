@@ -693,20 +693,22 @@ void EITEvent::init_EITEvent(const eit_event_struct *event, int tsidonid)
 	int ptr=0;
 	int len=HILO(event->descriptors_loop_length);
 	__u8 encode=0;
+	int doneShortEvent=0;
 	while (ptr<len)
 	{
 		descr_gen_t *d=(descr_gen_t*) (((__u8*)(event+1))+ptr);
 
-//		utils_dump("[Descriptor] ",(__u8*)d,d->descriptor_length+2,0);
+//		utils_dump("[Descriptor]\n",(__u8*)d,d->descriptor_length+2,0);
 
 		Descriptor *descr = Descriptor::create(d,tsidonid,0,encode);
-		if ( descr->Tag() == DESCR_SHORT_EVENT )
+		if ( descr->Tag() == DESCR_SHORT_EVENT && !doneShortEvent )
 		{
 			ShortEventDescriptor *sdescr = (ShortEventDescriptor*)descr;
 			ShortEventName = sdescr->event_name;
 			ShortEventText = sdescr->text;
 //			printf("[ShortEventName]%s\t [ShortEventText]%s\n",sdescr->event_name.c_str(),sdescr->text.c_str());
 			delete descr;
+			doneShortEvent=1;
 		}
 		else if ( descr->Tag() == DESCR_EXTENDED_EVENT )
 		{
@@ -721,6 +723,7 @@ void EITEvent::init_EITEvent(const eit_event_struct *event, int tsidonid)
 		else 
 		{
 			printf("Invalid descriptor,Tag:0x%02x\n",descr->Tag());
+//			utils_dump("[Descriptor] ",(__u8*)d,d->descriptor_length+2,0);
 			delete descr;
 			break;
 		}

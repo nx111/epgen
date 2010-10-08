@@ -2,7 +2,7 @@
 #include "lib/estring.h"
 
 #define BUILD_DATE	"2010年10月"
-#define VERSION		"1.1.4"
+#define VERSION		"1.1.5"
 
 int main(int argc,char ** argv)
 {
@@ -49,9 +49,9 @@ int main(int argc,char ** argv)
 		printf("**********************************************************************\n");
 #else
 		printf(             "**********************************************************************\n");
-		printf(UTF8ToGB2312("*         EPG数据转换器     v%s                                   *\n").c_str(),VERSION);
-		printf(UTF8ToGB2312("*         作者：nx111	gdzdz@163.com                                *\n").c_str());
-		printf(UTF8ToGB2312("*         %s                                                  *\n").c_str(),BUILD_DATE);
+		printf(str_UTF8ToGB2312("*         EPG数据转换器     v%s                                   *\n"),VERSION);
+		printf(str_UTF8ToGB2312("*         作者：nx111	gdzdz@163.com                                *\n"));
+		printf(str_UTF8ToGB2312("*         %s                                                  *\n"),BUILD_DATE);
 		printf(             "**********************************************************************\n");
 
 #endif

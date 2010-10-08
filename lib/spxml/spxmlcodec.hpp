@@ -6,8 +6,8 @@
 #ifndef __spxmlcodec_hpp__
 #define __spxmlcodec_hpp__
 
-#define	UTF8_ENCODE  1
-#define	GBK_ENCODE   2
+#define	UTF8_ENCODE  	1
+#define	GB18030_ENCODE  2
 	
 class SP_XmlStringBuffer;
 

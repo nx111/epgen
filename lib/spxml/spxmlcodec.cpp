@@ -9,7 +9,7 @@
 
 #include "spxmlcodec.hpp"
 #include "spxmlutils.hpp"
-#include "../gbk.h"
+#include "../gb18030.h"
 
 const char * SP_XmlStringCodec :: DEFAULT_ENCODING = "utf-8";
 
@@ -26,7 +26,7 @@ int SP_XmlStringCodec :: decode( const char * encoding, const char * encodeValue
 		encodemode=UTF8_ENCODE;
 	else if(0 == strcasecmp( encoding, "gb2312" ) || 0 == strcasecmp( encoding, "gb18030" ) || 
 	     0 == strcasecmp( encoding, "gbk" ) )
-		encodemode=GBK_ENCODE;
+		encodemode=GB18030_ENCODE;
 	
 	const char * pos = encodeValue;
 	for( ; '\0' != *pos; ) {
@@ -58,7 +58,7 @@ int SP_XmlStringCodec :: decode( const char * encoding, const char * encodeValue
 				if( ';' == *next && 0 != ch ) {
 					if( encodemode==UTF8_ENCODE )
 						SP_XmlUtf8Codec::uni2utf8( ch, outBuffer );
-					else if( encodemode==GBK_ENCODE )
+					else if( encodemode==GB18030_ENCODE )
 						SP_XmlGbkCodec::uni2gbk( ch, outBuffer );
 					else
 						outBuffer->append( ch );
@@ -83,7 +83,7 @@ int SP_XmlStringCodec :: encode( const char * encoding, const char * decodeValue
 		encodemode=UTF8_ENCODE;
 	else if(0 == strcasecmp( encoding, "gb2312" ) || 0 == strcasecmp( encoding, "gb18030" ) || 
 	     0 == strcasecmp( encoding, "gbk" ) )
-		encodemode=GBK_ENCODE;
+		encodemode=GB18030_ENCODE;
 
 	const unsigned char * pos = (unsigned char *)decodeValue;
 	for( ; '\0' != *pos; pos++ ) {
@@ -110,7 +110,7 @@ int SP_XmlStringCodec :: encode( const char * encoding, const char * decodeValue
 					pos += len-1;
 					
 				} 
-			else if( encodemode==GBK_ENCODE) {
+			else if( encodemode==GB18030_ENCODE) {
 				int ch=0;
 				int len= SP_XmlGbkCodec::gbk2uni((unsigned char*)pos, &ch);
 				if(len>0){
