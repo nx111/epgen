@@ -29,6 +29,7 @@ main : main.o
 	
 test: .test
 	$(LINKER) $(LDFLAGS) obj/estring.o obj/test.o -o test
+
 .test: test.o estring.o
 
 base : endian.o estring.o dvb.o epg.o
