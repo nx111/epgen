@@ -67,10 +67,11 @@ eString& eString::upper()
 
 eString& eString::trim()
 {
-  iterator i;
-    for (i = begin(); i != end(); i++) {
-        if ( (unsigned char)(*i) > 0x20 ) {
-            erase(begin(), i);
+    iterator i;
+    int len=0;
+    for (i = begin(); i != end(); i++,len++) {
+        if ( (unsigned char)(*i) > 0x20) {
+            erase(0,len);
             break;
         }
     }
@@ -79,9 +80,11 @@ eString& eString::trim()
         return *this;
     }
 
-    for (i = end() - 1; i != begin(); i--) {
+    
+    for (i=end()-1,len=0; i != begin(); i--,len++) {
         if ( (unsigned char)(*i) > 0x20) {
-            erase(i + 1, end());
+	    int pos=size()-len;
+            erase(pos, len);
             break;
         }
     }

@@ -2,7 +2,7 @@
 #include "lib/epg.h"
 #include "lib/estring.h"
 
-#define VERSION		"1.1.6"
+#define VERSION		"1.1.7"
 
 int main(int argc,char ** argv)
 {
@@ -51,8 +51,19 @@ int main(int argc,char ** argv)
 		printf("*         Author：nx111       email:gdzdz@163.com                    *\n");
 		printf("*         %04d-%02d                                                    *\n",local->tm_year+1900,local->tm_mon+1);
 		printf("**********************************************************************\n");
-
-		printf("\nusage:%s [-i <input epgfile>] [-o <output epgfile>] [-v5|-v7|-v7be|-v7le|-xmltv ] [-d|-dd] [-?|-h|--help]\n",argv[0]);
+		
+		eString argv0=argv[0];
+#ifndef __WIN32__
+		unsigned int boff=argv0.rfind("/");
+#else
+		unsigned int boff=argv0.rfind("\\");
+#endif
+		char *basename;
+		if(boff != std::string::npos)
+			basename=argv[0]+boff+1;
+		else
+			basename=argv[0];
+		printf("\nusage:  %s [-i <input epgfile>] [-o <output epgfile>] [-v5|-v7|-v7be|-v7le|-xmltv ] [-bom] [-d|-dd] [-?|-h|--help]\n",basename);
 		return 0;
 	}
 
