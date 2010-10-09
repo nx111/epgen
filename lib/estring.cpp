@@ -70,7 +70,7 @@ eString& eString::trim()
     iterator i;
     int len=0;
     for (i = begin(); i != end(); i++,len++) {
-        if ( (unsigned char)(*i) > 0x20) {
+        if ( (unsigned char)(*i) > '\x20') {
             erase(0,len);
             break;
         }
@@ -81,10 +81,10 @@ eString& eString::trim()
     }
 
     
-    for (i=end()-1,len=0; i != begin(); i--,len++) {
-        if ( (unsigned char)(*i) > 0x20) {
+    for (i=end(),len=0; i != begin(); i--,len++) {
+        if ( (unsigned char)(*i) > '\x20' && i != end() ) {
 	    int pos=size()-len;
-            erase(pos, len);
+            erase(pos+1, len);
             break;
         }
     }
@@ -276,7 +276,7 @@ eString GB18030ToUTF8(const unsigned char *szIn, int len,int *pconvertedLen)
 	char szOut[len * 2];
 	unsigned long code=0;
 	int t=0,i=0;
-	for(i=0; i < (len-1);){
+	for(i=0; i < len;){
 		int cl=0,k=0;
 
 		cl=gb18030_mbtowc((ucs4_t*)(&code),(const unsigned char *)szIn+i,len-i);

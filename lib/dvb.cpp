@@ -714,7 +714,7 @@ void EITEvent::init_EITEvent(const eit_event_struct *event, int tsidonid)
 		{
 			ExtendedEventDescriptor *edescr = (ExtendedEventDescriptor*) descr;
 			eString txt=edescr->text;
-			if(txt.at(0)<0x20 && ExtendedEventText.size())
+			if((unsigned char)(txt.at(0))<0x20 && ExtendedEventText.size())
 				txt.erase(0,1);
 //			printf("[ExtendedEventText]%s\n",edescr->text.c_str());
 			ExtendedEventText+=txt;
