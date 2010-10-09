@@ -1,8 +1,8 @@
+#include <time.h>
 #include "lib/epg.h"
 #include "lib/estring.h"
 
-#define BUILD_DATE	"2010年10月"
-#define VERSION		"1.1.5"
+#define VERSION		"1.1.6"
 
 int main(int argc,char ** argv)
 {
@@ -41,20 +41,16 @@ int main(int argc,char ** argv)
 	}
 	
 	if(argc==1 || mode==-1 || infile==""){
-#ifndef __WIN32__
-		printf("**********************************************************************\n");
-		printf("*         EPG数据转换器     v%s                                   *\n",VERSION);
-		printf("*         作者：nx111	gdzdz@163.com                                *\n");
-		printf("*         %s                                                  *\n",BUILD_DATE);
-		printf("**********************************************************************\n");
-#else
-		printf(             "**********************************************************************\n");
-		printf(str_UTF8ToGB2312("*         EPG数据转换器     v%s                                   *\n"),VERSION);
-		printf(str_UTF8ToGB2312("*         作者：nx111	gdzdz@163.com                                *\n"));
-		printf(str_UTF8ToGB2312("*         %s                                                  *\n"),BUILD_DATE);
-		printf(             "**********************************************************************\n");
+		struct tm *local;
+		time_t t;
+		t=time(NULL);
+		local=localtime(&t);
 
-#endif
+		printf("**********************************************************************\n");
+		printf("*         EPG Generator v%s                                       *\n",VERSION);
+		printf("*         Author：nx111       email:gdzdz@163.com                    *\n");
+		printf("*         %04d-%02d                                                    *\n",local->tm_year+1900,local->tm_mon+1);
+		printf("**********************************************************************\n");
 
 		printf("\nusage:%s [-i <input epgfile>] [-o <output epgfile>] [-v5|-v7|-v7be|-v7le|-xmltv ] [-d|-dd] [-?|-h|--help]\n",argv[0]);
 		return 0;

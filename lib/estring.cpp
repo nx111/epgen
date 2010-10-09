@@ -69,7 +69,7 @@ eString& eString::trim()
 {
   iterator i;
     for (i = begin(); i != end(); i++) {
-        if (!isspace(*i)) {
+        if ( (unsigned char)(*i) > 0x20 ) {
             erase(begin(), i);
             break;
         }
@@ -80,7 +80,7 @@ eString& eString::trim()
     }
 
     for (i = end() - 1; i != begin(); i--) {
-        if (!isspace(*i)) {
+        if ( (unsigned char)(*i) > 0x20) {
             erase(i + 1, end());
             break;
         }
@@ -290,7 +290,7 @@ eString GB18030ToUTF8(const unsigned char *szIn, int len,int *pconvertedLen)
 	return eString(szOut,t);
 }
 
-eString UTF8GB2312(const unsigned char *szIn,int slen)
+eString UTF8ToGB2312(const unsigned char *szIn,int slen)
 {
 	unsigned long code=0;
 	unsigned char temp[4096];

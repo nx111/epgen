@@ -51,9 +51,7 @@ int stepUTF8(const eString &string,int pos=0);
 eString Big5ToUTF8(const unsigned char *szIn, int len,int *pconvertedLen=0);
 eString GB18030ToUTF8(const unsigned char *szIn, int len,int *pconvertedLen=0);
 eString UTF8ToGB2312(const unsigned char *szIn,int len=0);
-inline eString UTF8ToGB2312(const char * szIn,int len=0){return UTF8ToGB2312((const unsigned char *)szIn,len);};
-inline eString UTF8ToGB2312(unsigned char const * szIn,int len){return UTF8ToGB2312((const unsigned char *)szIn,len);}
-inline char * str_UTF8ToGB2312(const char * szIn,int len=0){eString rets=UTF8ToGB2312((const unsigned char *)szIn,len);return (char *)rets.c_str();};
+//inline char * str_UTF8ToGB2312(const char * szIn,int len=0){eString rets=UTF8ToGB2312((const unsigned char *)szIn,len);return (char *)rets.c_str();};
 int UnicodeToUTF8(long c, char *out);
 int isSpaceChar(char ch);
 eString XML_ENCODE(eString &sin);

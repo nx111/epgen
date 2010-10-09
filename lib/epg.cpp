@@ -577,7 +577,7 @@ int epg::loadepg_from_xmltv(eString epgfile)
 	map<__u16,eString> xmltvmap;
 	map<__u16,uniqueEPGKey> xmltv_tsonid_map;
 	
-	char temp[8*1024];
+	char temp[4*1024];
 	SP_XmlDomParser parser;
 	fseek(f,0,SEEK_SET);
 	while (!feof(f)){		
@@ -854,9 +854,9 @@ int epg::dispepg()
 			eString ShortEventText=ev.ShortEventText;
 			eString ExtendedEventText=ev.ExtendedEventText;
 #else
-			eString ShortEventName=UTF8ToGB2312((const char *)ev.ShortEventName.c_str(),ev.ShortEventName.size());
-			eString ShortEventText=UTF8ToGB2312((const char *)ev.ShortEventText.c_str(),ev.ShortEventText.size());
-			eString ExtendedEventText=UTF8ToGB2312((const char *)ev.ExtendedEventText.c_str(),ev.ExtendedEventText.size());
+			eString ShortEventName=UTF8ToGB2312((const unsigned char *)ev.ShortEventName.c_str(),ev.ShortEventName.size());
+			eString ShortEventText=UTF8ToGB2312((const unsigned char *)ev.ShortEventText.c_str(),ev.ShortEventText.size());
+			eString ExtendedEventText=UTF8ToGB2312((const unsigned char *)ev.ExtendedEventText.c_str(),ev.ExtendedEventText.size());
 #endif
 
 			if(debug)
