@@ -2,7 +2,7 @@
 #include "lib/epg.h"
 #include "lib/estring.h"
 
-#define VERSION		"1.1.8"
+#define VERSION		"1.1.9"
 
 int main(int argc,char ** argv)
 {

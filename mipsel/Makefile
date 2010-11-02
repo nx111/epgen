@@ -1,4 +1,4 @@
-CC = /work/dm500/OpenPLI/trunk/pli-oe/build-dm800/tmp/cross/mipsel-linux/bin/gcc
+CC = /work/dm500/toolchains/mipsel-unknown-linux-gnu/bin/mipsel-unknown-linux-gnu-g++
 CFLAGS = -Wall -D_REENTRANT -D_GNU_SOURCE 
 LDFLAGS = -lstdc++ -s
 

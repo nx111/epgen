@@ -206,14 +206,24 @@ eit_event_struct* eventData::get_v5(int targetEndian)
 	__u32 *p = (__u32*)(EITdata+10);
 	while(tmp>3 )
 	{
+		__u32 descriptor_id=getINT32(*p++,endian);
 		descriptorMap::iterator it =
-			descriptors.find(getINT32(*p++,endian));
+			descriptors.find(descriptor_id);
 		if ( it != descriptors.end() )
 		{
 			int b = it->second.second[1]+2;
 
-			if((pos+b)>8192)break;
+			if((pos+b)>eventData_TmpSize)break;
+
+			__u32 crc = 0;
+			int cnt=0,optr=0;
+			while(cnt++ < (it->second.second[1]+2))
+				crc = (crc << 8) ^ crc32_table[((crc >> 24) ^ it->second.second[optr++]) & 0xFF];
 			
+			__u32 crc_b=getINT32(crc,B_ENDIAN);
+			__u32 crc_l=getINT32(crc,L_ENDIAN);
+			if(descriptor_id != crc_b && descriptor_id != crc_l)break;
+		
 			memcpy(data+pos, it->second.second, b );
 			pos += b;
 			descriptors_length += b;
@@ -696,12 +706,16 @@ void EITEvent::init_EITEvent(const eit_event_struct *event, int tsidonid)
 	int doneShortEvent=0;
 	while (ptr<len)
 	{
-		descr_gen_t *d=(descr_gen_t*) (((__u8*)(event+1))+ptr);
+		//fix for extended event data
+		__u8 *pdescrData=(((__u8*)(event+1))+ptr);
+		int descrLen=getDescriptorLen(pdescrData,len-ptr);
+
+		descr_gen_t *d=(descr_gen_t*)pdescrData;
 
 //		utils_dump("[Descriptor]\n",(__u8*)d,d->descriptor_length+2,0);
 
 		Descriptor *descr = Descriptor::create(d,tsidonid,0,encode);
-		if ( descr->Tag() == DESCR_SHORT_EVENT && !doneShortEvent )
+		if ( descr->Tag() == DESCR_SHORT_EVENT )
 		{
 			ShortEventDescriptor *sdescr = (ShortEventDescriptor*)descr;
 			ShortEventName = sdescr->event_name;
@@ -710,10 +724,12 @@ void EITEvent::init_EITEvent(const eit_event_struct *event, int tsidonid)
 			delete descr;
 			doneShortEvent=1;
 		}
+		else if ( descr->Tag() == DESCR_SHORT_EVENT && doneShortEvent);	//alway done shortEvent,skip it
 		else if ( descr->Tag() == DESCR_EXTENDED_EVENT )
 		{
 			ExtendedEventDescriptor *edescr = (ExtendedEventDescriptor*) descr;
 			eString txt=edescr->text;
+//			eString	txt=eString((const char*)(pdescrData+8+pdescrData[6]),descrLen-8-pdescrData[6]);
 			if((unsigned char)(txt.at(0))<0x20 && ExtendedEventText.size())
 				txt.erase(0,1);
 //			printf("[ExtendedEventText]%s\n",edescr->text.c_str());
@@ -722,16 +738,44 @@ void EITEvent::init_EITEvent(const eit_event_struct *event, int tsidonid)
 		}
 		else 
 		{
-			printf("Invalid descriptor,Tag:0x%02x\n",descr->Tag());
-//			utils_dump("[Descriptor] ",(__u8*)d,d->descriptor_length+2,0);
+			printf("Invalid descriptor,Tag:0x%02x, descriptor_length:0x%x len:0x%x ptr:0x%x\n",descr->Tag(),d->descriptor_length,len,ptr);
+			utils_dump("[eventData]\n",(__u8*)(event+1),len,0);
+			utils_dump("[Descriptor]\n",(__u8*)d,d->descriptor_length+2,0);
+			printf("%s\n",(__u8*)d);
 			delete descr;
 			break;
 		}
-		ptr+=d->descriptor_length+2;
+		ptr+=descrLen;
 	}
 	ExtendedEventText=convertDVBUTF8((const unsigned char *)(ExtendedEventText.c_str()),ExtendedEventText.size());
 //	printf("[EITEvent]len=%d\t[N]%s\t[T]%s\n\t\%s\n",len,ShortEventName.c_str(),ShortEventText.c_str(),ExtendedEventText.c_str());
 
 }
 
+int EITEvent::getDescriptorLen(__u8* event,int len){
+	int nlen=event[1];
+	if(event[0]==DESCR_EXTENDED_EVENT || event[0]==DESCR_SHORT_EVENT){
+		__u8 *p;
+//		nlen=5;
+		for(p=event+nlen; nlen<len; p++,nlen++){
+			if((nlen<(len-7) && p[0]=='\x4e' && p[3]=='e' && p[4]=='n') ||
+			   (nlen<(len-7) && p[0]=='\x4e' && p[3]=='E' && p[4]=='N') ||
+			   (nlen<(len-7) && p[0]=='\x4e' && p[3]=='z' && p[4]=='h') ||
+			   (nlen<(len-7) && p[0]=='\x4e' && p[3]=='Z' && p[4]=='H') ||
+			   (nlen<(len-7) && p[0]=='\x4e' && p[3]=='c' && p[4]=='h') ||
+			   (nlen<(len-7) && p[0]=='\x4e' && p[3]=='C' && p[4]=='H') ||
+			   (nlen<(len-6) && p[0]=='\x4d' && p[2]=='e' && p[3]=='n') ||
+			   (nlen<(len-6) && p[0]=='\x4d' && p[2]=='E' && p[3]=='N') ||
+ 			   (nlen<(len-6) && p[0]=='\x4d' && p[2]=='z' && p[3]=='h') ||
+ 			   (nlen<(len-6) && p[0]=='\x4d' && p[2]=='Z' && p[3]=='H') ||
+ 			   (nlen<(len-6) && p[0]=='\x4d' && p[2]=='c' && p[3]=='h') ||
+ 			   (nlen<(len-6) && p[0]=='\x4d' && p[2]=='C' && p[3]=='H') ){
+				break;
+			}
+		}
+//		for(p=event+nlen;p>(event+6) && (*p)=='\0';p--,nlen--);
+	}
+	return nlen;
+
+}
 

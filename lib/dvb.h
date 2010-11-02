@@ -126,6 +126,7 @@ int makeDVBtime(unsigned char *out,time_t time);
 #define tsonidMap hash_map<uniqueEPGKey,uniqueEPGKey,hash_uniqueEPGKey, uniqueEPGKey::equal>
 #define tvNameMap map<eString,uniqueEPGKey>
 
+#define eventData_TmpSize	8192
 class eventData
 {
 	friend class epg;
@@ -229,6 +230,7 @@ public:
 class EITEvent
 {
 	void init_EITEvent(const eit_event_struct *event, int tsidonid);
+	int getDescriptorLen(__u8* event,int len);
 public:
 	EITEvent(const eit_event_struct *event, int tsidonid, int type,int source=srDEFAULT);
 	EITEvent();

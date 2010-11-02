@@ -23,6 +23,8 @@
 
 #define HILO(x) (x##_hi << 8 | x##_lo)
 
+#define tempsize 8196
+
 int data_endian=X_ENDIAN;
 int running_endian=X_ENDIAN;	//1: big endian     2: little endian
 
@@ -321,7 +323,6 @@ int epg::saveepg(eString epgfile,int targetMode,int bomMode)
 	return 0;
 }
 
-#define tempsize 4198
 int epg::loadepg_from_event_struct(event_data_struct &eds)
 {
 	tsonidMap::iterator ikey=tvmap.find(eds.tsonid);
@@ -553,9 +554,31 @@ int epg::load_tvmap(eString mapfile)
 
 int epg::save_tvmap(eString mapfile)
 {
-	if(tvnmap.size()==0)return 0;
 	FILE *f = fopen(mapfile.c_str(), "wt");
 	if(!f)return -1;
+
+	for(eventCache::iterator it=eventDB.begin();it!=eventDB.end();it++){
+		timeMap *tmMap=&(it->second.second);
+		eString chname;
+		for(timeMap::iterator i=tmMap->begin(); i!=tmMap->end();i++){
+			chname.clear();
+			const eit_event_struct* eit=i->second->get_v5();
+			EITEvent ev( eit, (it->first.tsid<<16)|it->first.onid, i->second->type,i->second->source);
+			eString desc=ev.ShortEventText.trim()+" "+ev.ExtendedEventText.trim();
+//			printf("[CHANNEL]%s\n",desc.c_str());
+			unsigned int pos=desc.find(":");
+			if(pos != std::string::npos){
+				chname=XML_ENCODE(desc.left(pos).trim());
+				if(chname.size()<=45)
+					break;
+			}
+		}
+		if(chname=="")continue;
+
+		tvnmap[chname]=it->first;
+
+	}
+
 	for(map<eString, uniqueEPGKey>::iterator mIt=tvnmap.begin();mIt != tvnmap.end();++mIt){
 		fprintf(f,"%d:%d:%d=%s\n",mIt->second.sid,mIt->second.onid,mIt->second.tsid,mIt->first.c_str());
 		
@@ -577,11 +600,11 @@ int epg::loadepg_from_xmltv(eString epgfile)
 	map<__u16,eString> xmltvmap;
 	map<__u16,uniqueEPGKey> xmltv_tsonid_map;
 	
-	char temp[4*1024];
+	char temp[tempsize];
 	SP_XmlDomParser parser;
 	fseek(f,0,SEEK_SET);
 	while (!feof(f)){		
-		int len=fread(temp,1,8*1024,f);		
+		int len=fread(temp,1,tempsize,f);		
 		parser.append(temp,len);
 	}
 	fseek(f,0,SEEK_SET);
@@ -858,6 +881,10 @@ int epg::dispepg()
 			eString ShortEventText=UTF8ToGB2312((const unsigned char *)ev.ShortEventText.c_str(),ev.ShortEventText.size());
 			eString ExtendedEventText=UTF8ToGB2312((const unsigned char *)ev.ExtendedEventText.c_str(),ev.ExtendedEventText.size());
 #endif
+			if((unsigned char)(ShortEventName.at(0))<0x20)ShortEventName.erase(0,1);
+			if((unsigned char)(ShortEventText.at(0))<0x20)ShortEventText.erase(0,1);
+			if((unsigned char)(ExtendedEventText.at(0))<0x20)ExtendedEventText.erase(0,1);
+
 
 			if(debug)
 			     printf("i->first=%ld duration=%d first+duration=%ld now=%ld\n",i->first,i->second->getDuration(),i->first+i->second->getDuration(),time(0));
