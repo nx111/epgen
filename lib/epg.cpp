@@ -881,10 +881,9 @@ int epg::dispepg()
 			eString ShortEventText=UTF8ToGB2312((const unsigned char *)ev.ShortEventText.c_str(),ev.ShortEventText.size());
 			eString ExtendedEventText=UTF8ToGB2312((const unsigned char *)ev.ExtendedEventText.c_str(),ev.ExtendedEventText.size());
 #endif
-			if((unsigned char)(ShortEventName.at(0))<0x20)ShortEventName.erase(0,1);
-			if((unsigned char)(ShortEventText.at(0))<0x20)ShortEventText.erase(0,1);
-			if((unsigned char)(ExtendedEventText.at(0))<0x20)ExtendedEventText.erase(0,1);
-
+			ShortEventName=ShortEventName.trim();
+			ShortEventText=ShortEventText.trim();
+			ExtendedEventText=ExtendedEventText.trim();
 
 			if(debug)
 			     printf("i->first=%ld duration=%d first+duration=%ld now=%ld\n",i->first,i->second->getDuration(),i->first+i->second->getDuration(),time(0));

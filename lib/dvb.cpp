@@ -510,13 +510,14 @@ void eventData::load(FILE *f,int source)
 		return;
 
 
-	int size=0;
+	int size=0,i;
 	int id=0;
 	__u8 header[2];
 	descriptorPair p;
 	fread(&size, sizeof(int), 1, f);
 	size=getINT32(size);
-	while(size)
+	i=size;
+	while(i)
 	{
 		fread(&id, sizeof(__u32), 1, f);
 		id=getINT32(id);
@@ -532,10 +533,11 @@ void eventData::load(FILE *f,int source)
 		p.second[1] = header[1];
 		fread(p.second+2, bytes-2, 1, f);
 		descriptors[id]=p;
-		--size;
+		--i;
 		CacheSize+=bytes;
 //		utils_dump("[Descriptor]",p.second,bytes);
 	}
+	printf("descriptors:%d descriptors loaded!\n",size);
 	
 }
 

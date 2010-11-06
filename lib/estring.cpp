@@ -75,6 +75,8 @@ eString& eString::trim()
             break;
         }
     }
+    if(i==end())
+	erase(0);
 
     if (i == end()) {
         return *this;
@@ -88,6 +90,8 @@ eString& eString::trim()
             break;
         }
     }
+    if(i==begin())
+	erase(0);
 
     return *this;
 }
@@ -470,6 +474,7 @@ eString convertDVBUTF8(const unsigned char *data, int len, int table, int tsidon
 			encode=BIG5_ENCODING;
 			break;
 		case 0x15: // UTF-8 encoding of ISO/IEC 10646-1
+			++i;
 			encode=UTF8_ENCODING;
 //			return std::string((char*)data+1, len-1);
 			break;

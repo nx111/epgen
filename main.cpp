@@ -2,7 +2,10 @@
 #include "lib/epg.h"
 #include "lib/estring.h"
 
-#define VERSION		"1.1.9"
+#define VERSION		"1.1.10"
+
+const char *months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug",
+                            "Sep", "Oct", "Nov", "Dec"};
 
 int main(int argc,char ** argv)
 {
@@ -41,15 +44,23 @@ int main(int argc,char ** argv)
 	}
 	
 	if(argc==1 || mode==-1 || infile==""){
-		struct tm *local;
-		time_t t;
-		t=time(NULL);
-		local=localtime(&t);
+		int year,day,mon;
+		char smon[20];
+		sscanf(__DATE__,"%s %d %d",smon,&day,&year);
+		for (int i = 0; i < 12; i++)
+		{
+		    if (!strncasecmp(smon, months[i],3))
+		    {
+		      mon = i + 1;
+		      break;
+		    }
+		}
+
 
 		printf("**********************************************************************\n");
-		printf("*         EPG Generator v%s                                       *\n",VERSION);
+		printf("*         EPG Generator v%10s                                  *\n",VERSION);
 		printf("*         Author：nx111       email:gdzdz@163.com                    *\n");
-		printf("*         %04d-%02d                                                    *\n",local->tm_year+1900,local->tm_mon+1);
+		printf("*         %04d.%02d                                                    *\n",year,mon);
 		printf("**********************************************************************\n");
 		
 		eString argv0=argv[0];
