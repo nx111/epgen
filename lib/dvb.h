@@ -125,6 +125,7 @@ int makeDVBtime(unsigned char *out,time_t time);
 #define descriptorMap hash_map<__u32, descriptorPair>
 #define tsonidMap hash_map<uniqueEPGKey,uniqueEPGKey,hash_uniqueEPGKey, uniqueEPGKey::equal>
 #define tvNameMap map<eString,uniqueEPGKey>
+#define tvAllNameMap map<uniqueEPGKey,eString>
 
 #define eventData_TmpSize	8192
 class eventData

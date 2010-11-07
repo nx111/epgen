@@ -31,6 +31,7 @@ int running_endian=X_ENDIAN;	//1: big endian     2: little endian
 eventCache eventDB;
 tsonidMap tvmap;
 tvNameMap tvnmap;
+tvAllNameMap tvamap;
 long timeoff;
 
 
@@ -113,6 +114,9 @@ string strtime(time_t time)
 
 epg::epg():endian(B_ENDIAN),maxEventID(0),debug(0)
 {
+	tvmap.clear();
+	tvnmap.clear();
+	tvamap.clear();
 }
 
 int epg::loadepg(eString epgfile,int filetype)
@@ -477,6 +481,7 @@ int epg::load_tvmap(eString mapfile)
 	FILE *f = fopen(mapfile.c_str(), "rt");
 	if(!f)return -1;
 	tvnmap.clear();
+	tvmap.clear();
 	
 
 	char *line = (char*) malloc(256);
@@ -539,11 +544,13 @@ int epg::load_tvmap(eString mapfile)
 			      tvNameMap::iterator it=tvnmap.find(chname);
 			      if(it!=tvnmap.end() && it->second != uniqueEPGKey(sid,onid,tsid)){
 			      		tvmap[uniqueEPGKey(sid,onid,tsid)]=it->second;
+					tvamap[uniqueEPGKey(sid,onid,tsid)]=chname;
 			      		tvnmap[chname]=it->second;
 			      }
-			      else
+			      else{
 			      		tvnmap[chname]=uniqueEPGKey(sid,onid,tsid);
-			      
+					tvamap[uniqueEPGKey(sid,onid,tsid)]=chname;
+			      }
 		}
 	}
 	free(line);
@@ -552,7 +559,7 @@ int epg::load_tvmap(eString mapfile)
 	
 }
 
-int epg::save_tvmap(eString mapfile)
+int epg::save_tvmap(eString mapfile,int mode)
 {
 	FILE *f = fopen(mapfile.c_str(), "wt");
 	if(!f)return -1;
@@ -574,15 +581,29 @@ int epg::save_tvmap(eString mapfile)
 			}
 		}
 		if(chname=="")continue;
-
-		tvnmap[chname]=it->first;
+		if(!mode){
+			tvAllNameMap::iterator ait=tvamap.find(it->first);
+			if(ait == tvamap.end())
+				tvamap[it->first]=chname;
+		}
+		else{
+			tvNameMap::iterator nit=tvnmap.find(chname);
+			if(nit==tvnmap.end())
+				tvnmap[chname]=it->first;
+		}
 
 	}
 
-	for(map<eString, uniqueEPGKey>::iterator mIt=tvnmap.begin();mIt != tvnmap.end();++mIt){
-		fprintf(f,"%d:%d:%d=%s\n",mIt->second.sid,mIt->second.onid,mIt->second.tsid,mIt->first.c_str());
+	if(!mode)
+		for(map<uniqueEPGKey,eString>::iterator mIt=tvamap.begin();mIt != tvamap.end();++mIt){
+			fprintf(f,"%d:%d:%d=%s\n",mIt->first.sid,mIt->first.onid,mIt->first.tsid,mIt->second.c_str());
 		
-	}
+		}
+	else
+		for(map<eString, uniqueEPGKey>::iterator mIt=tvnmap.begin();mIt != tvnmap.end();++mIt){
+			fprintf(f,"%d:%d:%d=%s\n",mIt->second.sid,mIt->second.onid,mIt->second.tsid,mIt->first.c_str());
+		
+		}
 	fclose(f);
 	
 	return 0;
@@ -595,7 +616,7 @@ int epg::loadepg_from_xmltv(eString epgfile)
 	if(!f)return -1;
 
 	if(tvnmap.size() == 0)
-		load_tvmap("mvmap.dat");
+		load_tvmap("tvmap.dat");
 	
 	map<__u16,eString> xmltvmap;
 	map<__u16,uniqueEPGKey> xmltv_tsonid_map;
@@ -856,6 +877,7 @@ int epg::saveepg_to_xmltv(eString epgfile,int bomMode)
 epg::~epg()
 {
 	tvnmap.clear();
+	tvamap.clear();
 	tvmap.clear();
 	eventDB.clear();
 }

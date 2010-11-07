@@ -2,7 +2,7 @@
 #include "lib/epg.h"
 #include "lib/estring.h"
 
-#define VERSION		"1.1.11"
+#define VERSION		"1.1.12"
 
 const char *months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug",
                             "Sep", "Oct", "Nov", "Dec"};
@@ -15,6 +15,7 @@ int main(int argc,char ** argv)
 	int mode=0,inputed=0;
 	int wmode=srGEMINI_EPGDAT_BE;
 	int bom=0,autofix=1;
+	int tvmapout=0;
 
 	for(int i=1;i<argc;i++){
 		if(strcmp(argv[i],"-i")==0 && i<argc-1 ){
@@ -39,6 +40,8 @@ int main(int argc,char ** argv)
 			wmode=srXMLTV;
 		else if(strcmp(argv[i],"-bom")==0 )
 			bom=1;
+		else if(strcmp(argv[i],"-tvmap")==0 )
+			tvmapout=1;
 		else if(strcmp(argv[i],"-autofix")==0 && i<argc-1){
 			autofix=atoi(argv[i+1]);
 			i++;
@@ -78,18 +81,41 @@ int main(int argc,char ** argv)
 			basename=argv[0]+boff+1;
 		else
 			basename=argv[0];
-		printf("\nusage:  %s [-i <input epgfile>] [-o <output epgfile>] [-v5|-v7|-v7be|-v7le|-xmltv ] [-bom] [-d|-dd] [-?|-h|--help]\n",basename);
+		printf("\nusage:  %s [-i <input epgfile>] [-o <output epgfile>] [-v5|-v7|-v7be|-v7le|-xmltv ] [-bom] [-autofix <1|0>] [-tvmap] [-d|-dd] [-?|-h|--help]\n",basename);
 		return 0;
 	}
 
 	epg e; 
 	e.autofix=autofix;
+
 	if(mode==2)e.debug=1;
+
+#ifndef __WIN32__
+	unsigned int boff=infile.rfind("/");
+#else
+	unsigned int boff=infile.rfind("\\");
+#endif
+	eString infiledirname;
+		if(boff != std::string::npos)
+			infiledirname=infile.substr(0,boff+1);
+		else
+			infiledirname="";
+
+	if(access((infiledirname+"tvmap_all.dat").c_str(),R_OK) == 0)
+		e.load_tvmap(infiledirname+"tvmap_all.dat");
+	else if(access((infiledirname+"tvmap.dat").c_str(),R_OK) == 0)
+		e.load_tvmap(infiledirname+"tvmap.dat");
+
 	inputed=e.loadepg(infile);
+
+
 	if(outfile != "")
 		e.saveepg(outfile,wmode,bom);
 	if(mode)
 		e.dispepg();
-	e.save_tvmap("tvmap.dat");
+	if(tvmapout){
+		e.save_tvmap(infiledirname+"tvmap_all.dat",0);
+		e.save_tvmap(infiledirname+"tvmap.dat",1);
+	}
 	return 0;
 }

@@ -6,7 +6,7 @@
 使用说明：
 
 命令格式：
-epgen [-i <input epgfile>] [-o <output epgfile>] [-v5|-v7|-v7be|-v7le|-xmltv ] [-bom] [-autofix 1|0] [-?|-h|--help] [-d|-dd]
+epgen [-i <input epgfile>] [-o <output epgfile>] [-v5|-v7|-v7be|-v7le|-xmltv ] [-bom] [-autofix 1|0] [-tvmap] [-?|-h|--help] [-d|-dd]
 
    -i 输入EPG数据文件,可以是ENIGMA_EPG_V7、ENIGMA_PLI_V5的BIG/LITTLE ENDIAN数据文件，也可以是xmltv数据文件(扩展名必须是.xml)，xmltv数据文件支持在channel定义的tsonid属性。除帮助模式外，必须使用此参数。
  
@@ -17,6 +17,8 @@ epgen [-i <input epgfile>] [-o <output epgfile>] [-v5|-v7|-v7be|-v7le|-xmltv ] [
    -bom 输出为xmltv时输出BOM标记，默认不输出。
 
    -autofix <1|0>  转换时是否自动修复数据中的错误，默认为1。
+   
+   -tvmap  生成tvmap.dat/tvmap_all.dat。tvmap.dat包含无重复频道名的tsonid->频道对照表，tvmap_all.dat为所有频道的tsonid->频道对照表，
 
    -d 调试用，载入数据文件后显示数据内容。 -dd 更多调试信息。
  
