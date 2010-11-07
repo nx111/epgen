@@ -686,9 +686,9 @@ void ExtendedEventDescriptor::init_ExtendedEventDescriptor(descr_gen_t *descr)
 	ptr+=text_length;
 }
 
-EITEvent::EITEvent(const eit_event_struct *event, int tsidonid, int type,int source)
+EITEvent::EITEvent(const eit_event_struct *event, int tsidonid, int type,int autofix)
 {
-	this->source=source;
+	this->autofix=autofix;
 	init_EITEvent(event, tsidonid);
 }
 void EITEvent::init_EITEvent(const eit_event_struct *event, int tsidonid)
@@ -722,15 +722,17 @@ void EITEvent::init_EITEvent(const eit_event_struct *event, int tsidonid)
 			ShortEventDescriptor *sdescr = (ShortEventDescriptor*)descr;
 			ShortEventName = sdescr->event_name;
 			ShortEventText = sdescr->text;
+			doneShortEvent=1;
+			
 //			printf("[ShortEventName]%s\t [ShortEventText]%s\n",sdescr->event_name.c_str(),sdescr->text.c_str());
 			delete descr;
-			doneShortEvent=1;
 		}
 		else if ( descr->Tag() == DESCR_SHORT_EVENT && doneShortEvent);	//alway done shortEvent,skip it
 		else if ( descr->Tag() == DESCR_EXTENDED_EVENT )
 		{
 			ExtendedEventDescriptor *edescr = (ExtendedEventDescriptor*) descr;
 			eString txt=edescr->text;
+			
 //			eString	txt=eString((const char*)(pdescrData+8+pdescrData[6]),descrLen-8-pdescrData[6]);
 			if((unsigned char)(txt.at(0))<0x20 && ExtendedEventText.size())
 				txt.erase(0,1);
@@ -741,13 +743,16 @@ void EITEvent::init_EITEvent(const eit_event_struct *event, int tsidonid)
 		else 
 		{
 			printf("Invalid descriptor,Tag:0x%02x, descriptor_length:0x%x len:0x%x ptr:0x%x\n",descr->Tag(),d->descriptor_length,len,ptr);
-			utils_dump("[eventData]\n",(__u8*)(event+1),len,0);
-			utils_dump("[Descriptor]\n",(__u8*)d,d->descriptor_length+2,0);
-			printf("%s\n",(__u8*)d);
+//			utils_dump("[eventData]\n",(__u8*)(event+1),len,0);
+//			utils_dump("[Descriptor]\n",(__u8*)d,d->descriptor_length+2,0);
+//			printf("%s\n",(__u8*)d);
 			delete descr;
 			break;
 		}
-		ptr+=descrLen;
+		if(autofix)
+			ptr+=descrLen;
+		else
+			ptr+=d->descriptor_length+2;
 	}
 	ExtendedEventText=convertDVBUTF8((const unsigned char *)(ExtendedEventText.c_str()),ExtendedEventText.size());
 //	printf("[EITEvent]len=%d\t[N]%s\t[T]%s\n\t\%s\n",len,ShortEventName.c_str(),ShortEventText.c_str(),ExtendedEventText.c_str());
@@ -758,20 +763,12 @@ int EITEvent::getDescriptorLen(__u8* event,int len){
 	int nlen=event[1];
 	if(event[0]==DESCR_EXTENDED_EVENT || event[0]==DESCR_SHORT_EVENT){
 		__u8 *p;
-//		nlen=5;
+		nlen=5;
 		for(p=event+nlen; nlen<len; p++,nlen++){
-			if((nlen<(len-7) && p[0]=='\x4e' && p[3]=='e' && p[4]=='n') ||
-			   (nlen<(len-7) && p[0]=='\x4e' && p[3]=='E' && p[4]=='N') ||
-			   (nlen<(len-7) && p[0]=='\x4e' && p[3]=='z' && p[4]=='h') ||
-			   (nlen<(len-7) && p[0]=='\x4e' && p[3]=='Z' && p[4]=='H') ||
-			   (nlen<(len-7) && p[0]=='\x4e' && p[3]=='c' && p[4]=='h') ||
-			   (nlen<(len-7) && p[0]=='\x4e' && p[3]=='C' && p[4]=='H') ||
-			   (nlen<(len-6) && p[0]=='\x4d' && p[2]=='e' && p[3]=='n') ||
-			   (nlen<(len-6) && p[0]=='\x4d' && p[2]=='E' && p[3]=='N') ||
- 			   (nlen<(len-6) && p[0]=='\x4d' && p[2]=='z' && p[3]=='h') ||
- 			   (nlen<(len-6) && p[0]=='\x4d' && p[2]=='Z' && p[3]=='H') ||
- 			   (nlen<(len-6) && p[0]=='\x4d' && p[2]=='c' && p[3]=='h') ||
- 			   (nlen<(len-6) && p[0]=='\x4d' && p[2]=='C' && p[3]=='H') ){
+			if((nlen<(len-7) && p[0]=='\x4e' && p[3]=='e' && p[4]=='n' && p[5] == 'g') ||
+			   (nlen<(len-7) && p[0]=='\x4e' && p[3]=='E' && p[4]=='N' && p[5] == 'G') ||
+			   (nlen<(len-6) && p[0]=='\x4d' && p[2]=='e' && p[3]=='n' && p[4] == 'g') ||
+			   (nlen<(len-6) && p[0]=='\x4d' && p[2]=='E' && p[3]=='N' && p[4] == 'G') ){
 				break;
 			}
 		}

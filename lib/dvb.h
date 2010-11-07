@@ -232,10 +232,10 @@ class EITEvent
 	void init_EITEvent(const eit_event_struct *event, int tsidonid);
 	int getDescriptorLen(__u8* event,int len);
 public:
-	EITEvent(const eit_event_struct *event, int tsidonid, int type,int source=srDEFAULT);
+	EITEvent(const eit_event_struct *event, int tsidonid, int type,int autofix=0);
 	EITEvent();
 	int event_id;
-	int source;		
+	int autofix;		
 	time_t start_time;
 	int duration;
 	eString ShortEventName,ExtendedEventText,ShortEventText;

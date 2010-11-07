@@ -563,7 +563,7 @@ int epg::save_tvmap(eString mapfile)
 		for(timeMap::iterator i=tmMap->begin(); i!=tmMap->end();i++){
 			chname.clear();
 			const eit_event_struct* eit=i->second->get_v5();
-			EITEvent ev( eit, (it->first.tsid<<16)|it->first.onid, i->second->type,i->second->source);
+			EITEvent ev( eit, (it->first.tsid<<16)|it->first.onid, i->second->type,autofix);
 			eString desc=ev.ShortEventText.trim()+" "+ev.ExtendedEventText.trim();
 //			printf("[CHANNEL]%s\n",desc.c_str());
 			unsigned int pos=desc.find(":");
@@ -758,7 +758,7 @@ int epg::saveepg_to_xmltv(eString epgfile,int bomMode)
 		for(timeMap::iterator i=tmMap->begin(); i!=tmMap->end();i++){
 			chname.clear();
 			const eit_event_struct* eit=i->second->get_v5();
-			EITEvent ev( eit, (it->first.tsid<<16)|it->first.onid, i->second->type,i->second->source);
+			EITEvent ev( eit, (it->first.tsid<<16)|it->first.onid, i->second->type,autofix);
 			eString desc=ev.ShortEventText.trim()+" "+ev.ExtendedEventText.trim();
 //			printf("[CHANNEL]%s\n",desc.c_str());
 			unsigned int pos=desc.find(":");
@@ -782,7 +782,7 @@ int epg::saveepg_to_xmltv(eString epgfile,int bomMode)
 		timeMap *tmMap=&(it->second.second);
 		for(timeMap::iterator i=tmMap->begin();i!=tmMap->end();i++,cnt++){
 			const eit_event_struct* eit=i->second->get_v5();
-			EITEvent ev( eit, (it->first.tsid<<16)|it->first.onid, i->second->type,i->second->source);
+			EITEvent ev( eit, (it->first.tsid<<16)|it->first.onid, i->second->type,autofix);
 
 			map<uniqueEPGKey,__u16>::iterator itKeyNo=xmltv_tsonid_id_map.find(it->first);
 			if(itKeyNo == xmltv_tsonid_id_map.end())continue;
@@ -822,12 +822,17 @@ int epg::saveepg_to_xmltv(eString epgfile,int bomMode)
 
 			if(desc==".")
 				desc="";
-			else
-			   for(eString::iterator dit=desc.begin(); dit != desc.end(); dit++) {
-				if(!isSpaceChar(*dit) && (*dit)!='.')break;
-				if ((*dit)=='.') 
-				    desc.erase(dit);
-			    }
+			else{
+				eString::iterator dit=desc.begin();
+				int len=0;  
+				for(; dit != desc.end(); dit++,len++) 
+					if(!isSpaceChar(*dit) && (*dit)!='.'){
+						desc.erase(0,len);
+						break;
+					}
+				if(dit == desc.end())
+					desc.erase(0);
+			}
 			desc=XML_ENCODE(desc.trim());
 			eString title=XML_ENCODE(ev.ShortEventName).trim();
 			fprintf(f,"   <programme channel=\"%d\" start=\"%s %s\" stop=\"%s %s\"",channelid,start_time.c_str(),tzs,end_time.c_str(),tzs);
@@ -870,7 +875,7 @@ int epg::dispepg()
 //			if(total
 //			utils_dump("EITData:",(unsigned char *)i->second->EITdata,i->second->getSize(1),1);
 				
-			EITEvent ev( eit, (it->first.tsid<<16)|it->first.onid, i->second->type,i->second->source);
+			EITEvent ev( eit, (it->first.tsid<<16)|it->first.onid, i->second->type,autofix);
 
 #ifndef __WIN32__
 			eString ShortEventName=ev.ShortEventName;

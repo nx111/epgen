@@ -31,6 +31,7 @@ class epg
 	int saveepg_to_xmltv(eString epgfile,int bomMode=0);
 public:
 	int debug;
+	int autofix;
 	epg();
 	~epg();
 	int loadepg(eString epgfile,int filetype=0);

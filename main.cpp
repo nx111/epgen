@@ -2,7 +2,7 @@
 #include "lib/epg.h"
 #include "lib/estring.h"
 
-#define VERSION		"1.1.10"
+#define VERSION		"1.1.11"
 
 const char *months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug",
                             "Sep", "Oct", "Nov", "Dec"};
@@ -14,7 +14,7 @@ int main(int argc,char ** argv)
 	string infile,outfile;
 	int mode=0,inputed=0;
 	int wmode=srGEMINI_EPGDAT_BE;
-	int bom=0;
+	int bom=0,autofix=1;
 
 	for(int i=1;i<argc;i++){
 		if(strcmp(argv[i],"-i")==0 && i<argc-1 ){
@@ -39,6 +39,10 @@ int main(int argc,char ** argv)
 			wmode=srXMLTV;
 		else if(strcmp(argv[i],"-bom")==0 )
 			bom=1;
+		else if(strcmp(argv[i],"-autofix")==0 && i<argc-1){
+			autofix=atoi(argv[i+1]);
+			i++;
+		}
 		else if(strcmp(argv[i],"-?")==0 || strcmp(argv[i],"-h")==0 || strcmp(argv[i],"--help")==0)
 			mode=-1;
 	}
@@ -79,6 +83,7 @@ int main(int argc,char ** argv)
 	}
 
 	epg e; 
+	e.autofix=autofix;
 	if(mode==2)e.debug=1;
 	inputed=e.loadepg(infile);
 	if(outfile != "")
