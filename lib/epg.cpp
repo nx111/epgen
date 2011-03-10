@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
+#include <errno.h>
 #ifdef __WIN32__
 #   include <windows.h>
 #else
@@ -823,10 +824,6 @@ int epg::saveepg_to_xmltv(eString epgfile,int bomMode)
 			strftime(tmp,200,"%Y%m%d%H%M%S",pend);
 			eString end_time(tmp);
 
-//			printf("%16s %4d:%02d\t\%s\n\t\t%s\n\t\t%s\n",strtime(ev.start_time).c_str(),ev.duration/60,(ev.duration % 60),ev.ShortEventName.c_str(),ev.ShortEventText.c_str(),ev.ExtendedEventText.c_str());
-
-//			printf("\t\t%s\t==>\t%s\n",asctime(pstart),asctime(pend));
-
 			eString desc=ev.ShortEventText.trim();
 			if(desc.size())desc+=" ";
 			desc+=ev.ExtendedEventText.trim();
@@ -835,7 +832,8 @@ int epg::saveepg_to_xmltv(eString epgfile,int bomMode)
 			eString chname,desc2;
 			if(pos != std::string::npos){
 				chname=desc.left(pos+1).trim();
-				if(chname.size()<=46){
+//				printf("chname=%s\n",chname.c_str());
+				if(chname.size()<=46 and chname.size()>0){
 				    desc2=desc.strReplace(chname.c_str(),"",UTF8_ENCODING).trim();
 				    desc=desc2;
 				}
@@ -858,8 +856,14 @@ int epg::saveepg_to_xmltv(eString epgfile,int bomMode)
 			eString title=XML_ENCODE(ev.ShortEventName).trim();
 			fprintf(f,"   <programme channel=\"%d\" start=\"%s %s\" stop=\"%s %s\"",channelid,start_time.c_str(),tzs,end_time.c_str(),tzs);
 
-			if(debug)
-				fprintf(f," event_id=\"%d\" ",i->second->getEventID());
+
+			if(debug){
+				fprintf(f," event_id=\"%d\"  count=\"%d\"",i->second->getEventID(),cnt);
+				printf("   <programme channel=\"%d\" start=\"%s %s\" stop=\"%s %s\" event_id=\"%d\" count=%d>\n",channelid,start_time.c_str(),tzs,end_time.c_str(),tzs,i->second->getEventID(),cnt);
+				printf(   "        <title lang=\"zh\">%s</title>\n"\
+					  "        <desc  lang=\"zh\">%s</desc>\n"\
+					  "   </programme>\n",title.c_str(),desc.c_str());
+				}
 
 			fprintf(f, ">\n"\
 				  "        <title lang=\"zh\">%s</title>\n"\

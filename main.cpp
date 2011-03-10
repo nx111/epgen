@@ -2,7 +2,7 @@
 #include "lib/epg.h"
 #include "lib/estring.h"
 
-#define VERSION		"1.1.12"
+#define VERSION		"1.2.1"
 
 const char *months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug",
                             "Sep", "Oct", "Nov", "Dec"};
@@ -111,7 +111,7 @@ int main(int argc,char ** argv)
 
 	if(outfile != "")
 		e.saveepg(outfile,wmode,bom);
-	if(mode)
+	if(mode && !(e.debug==1 && outfile != ""))
 		e.dispepg();
 	if(tvmapout){
 		e.save_tvmap(infiledirname+"tvmap_all.dat",0);

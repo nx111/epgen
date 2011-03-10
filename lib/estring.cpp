@@ -102,6 +102,7 @@ eString& eString::strReplace(const char* fstr, const eString& rstr,int encode)
 	unsigned int index=0;
 	unsigned int fstrlen = strlen(fstr);
 	int rstrlen=rstr.size();
+	if(!fstrlen)return *this;
 
 	switch(encode){
 	case UTF8_ENCODING:
@@ -111,13 +112,13 @@ eString& eString::strReplace(const char* fstr, const eString& rstr,int encode)
 				index+=rstrlen;
 				continue;
 			}
-			if((at(index) & 0xE0)==0xC0)
+			if((index+2)<=length() && (at(index) & 0xE0)==0xC0 && (at(index+1) & 0xC0)==0x80)
 				index+=2;
 			else
-			if((at(index) & 0xF0)==0xE0)
+			if((index+3)<=length() && (at(index) & 0xF0)==0xE0 && (at(index+1) & 0xE0)==0xC0 && (at(index+2) & 0xC0)==0x80)
 				index+=3;
 			else
-			if((at(index) & 0xF8)==0xF0)
+			if((index+4)<=length() && (at(index) & 0xF8)==0xF0 && (at(index) & 0xF0)==0xE0 && (at(index+1) & 0xE0)==0xC0 && (at(index+2) & 0xC0)==0x80)
 				index+=4;
 			else
 				index++;
