@@ -12,7 +12,7 @@ __u8 eventData::data[8192];
 
 extern int running_endian;
 extern int data_endian;
-
+extern int debug;
 descriptorMap eventData::descriptors;
 descriptorMap eventData::descriptors_target;
 
@@ -204,9 +204,13 @@ eit_event_struct* eventData::get_v5(int targetEndian)
 	memcpy(data, EITdata, 10);
 	int descriptors_length=0;
 	__u32 *p = (__u32*)(EITdata+10);
+	if(debug)
+		printf("\n------------------------\n[EITEvent] 0x%02X%02X==== Descriptors:",data[0],data[1]);
 	while(tmp>3 )
 	{
 		__u32 descriptor_id=getINT32(*p++,endian);
+		if(debug)
+			printf(":%08X",descriptor_id);
 		descriptorMap::iterator it =
 			descriptors.find(descriptor_id);
 		if ( it != descriptors.end() )
@@ -215,31 +219,27 @@ eit_event_struct* eventData::get_v5(int targetEndian)
 
 			if((pos+b)>eventData_TmpSize)break;
 
-			__u32 crc = 0;
-			int cnt=0,optr=0;
-			while(cnt++ < (it->second.second[1]+2))
-				crc = (crc << 8) ^ crc32_table[((crc >> 24) ^ it->second.second[optr++]) & 0xFF];
-			
-			__u32 crc_b=getINT32(crc,B_ENDIAN);
-			__u32 crc_l=getINT32(crc,L_ENDIAN);
-			if(descriptor_id != crc_b && descriptor_id != crc_l)break;
-		
 			memcpy(data+pos, it->second.second, b );
 			pos += b;
 			descriptors_length += b;
 		}
 		tmp-=4;
 	}
+	if(debug)
+		printf("  descriptors_length:%04X\n",descriptors_length);
 	((eit_event_struct *)data)->descriptors_loop_length_hi = (descriptors_length >> 8) & 0x0F;
 	((eit_event_struct *)data)->descriptors_loop_length_lo = descriptors_length & 0xFF;
 
-//	printf("[debug]descriptors_length=0x%x\n",descriptors_length);
+	if(debug)
+		printf("  descriptors_length:%04X  writed_descriptors_length:%04X\n",descriptors_length,HILO(((eit_event_struct *)data)->descriptors_loop_length));
 
 	if(targetEndian!=X_ENDIAN)
 		adjust_eit_event_endian(data,targetEndian);
 	else
 		adjust_eit_event_endian(data,endian);
 	
+	if(debug)
+		utils_dump("[EventData_V5]:\n",data,descriptors_length);
 	return (eit_event_struct*)data;
 	
 }
@@ -693,6 +693,8 @@ EITEvent::EITEvent(const eit_event_struct *event, int tsidonid, int type,int aut
 }
 void EITEvent::init_EITEvent(const eit_event_struct *event, int tsidonid)
 {
+	eit_event_struct evt;
+	memcpy((__u8*)&evt,(__u8*)event,sizeof(eit_event_struct));
 	event_id=HILO(event->event_id);
 	if (event->start_time_5!=0xFF)
 		start_time=parseDVBtime(event->start_time_1, event->start_time_2, event->start_time_3,event->start_time_4, event->start_time_5);
@@ -703,9 +705,17 @@ void EITEvent::init_EITEvent(const eit_event_struct *event, int tsidonid)
 	else
 		duration=fromBCD(event->duration_1)*3600+fromBCD(event->duration_2)*60+fromBCD(event->duration_3);
 	int ptr=0;
-	int len=HILO(event->descriptors_loop_length);
+	adjust_eit_event_endian((__u8*)&evt);
+	int len=HILO(evt.descriptors_loop_length);
 	__u8 encode=0;
 	int doneShortEvent=0;
+
+	if(debug){
+//		utils_dump("[EITEvent DATA]:\n",(__u8*)event,len);
+		printf("descriptors_loop_length_hi=%02X descriptors_loop_length_lo=%02X\n",event->descriptors_loop_length_hi,event->descriptors_loop_length_lo);
+		printf("[EITEvent]len=%04X\n",len);
+	}
+
 	while (ptr<len)
 	{
 		//fix for extended event data
@@ -714,7 +724,10 @@ void EITEvent::init_EITEvent(const eit_event_struct *event, int tsidonid)
 
 		descr_gen_t *d=(descr_gen_t*)pdescrData;
 
-//		utils_dump("[Descriptor]\n",(__u8*)d,d->descriptor_length+2,0);
+		if(debug){
+			utils_dump("[Descriptor]\n",(__u8*)d,d->descriptor_length+2,0);
+			printf("[EITEvent]descrLen=%04X ptr=%04X\n",descrLen-2,ptr);
+		}
 
 		Descriptor *descr = Descriptor::create(d,tsidonid,0,encode);
 		if ( descr->Tag() == DESCR_SHORT_EVENT )
@@ -723,8 +736,8 @@ void EITEvent::init_EITEvent(const eit_event_struct *event, int tsidonid)
 			ShortEventName = sdescr->event_name;
 			ShortEventText = sdescr->text;
 			doneShortEvent=1;
-			
-//			printf("[ShortEventName]%s\t [ShortEventText]%s\n",sdescr->event_name.c_str(),sdescr->text.c_str());
+			if(debug)
+				printf("[ShortEventName]%s\t [ShortEventText]%s\n",sdescr->event_name.c_str(),sdescr->text.c_str());
 			delete descr;
 		}
 		else if ( descr->Tag() == DESCR_SHORT_EVENT && doneShortEvent);	//alway done shortEvent,skip it
@@ -736,7 +749,8 @@ void EITEvent::init_EITEvent(const eit_event_struct *event, int tsidonid)
 //			eString	txt=eString((const char*)(pdescrData+8+pdescrData[6]),descrLen-8-pdescrData[6]);
 			if((unsigned char)(txt.at(0))<0x20 && ExtendedEventText.size())
 				txt.erase(0,1);
-//			printf("[ExtendedEventText]%s\n",edescr->text.c_str());
+			if(debug)
+				printf("[ExtendedEventText]%s\n",edescr->text.c_str());
 			ExtendedEventText+=txt;
 			delete descr;
 		}
@@ -749,10 +763,8 @@ void EITEvent::init_EITEvent(const eit_event_struct *event, int tsidonid)
 			delete descr;
 			break;
 		}
-		if(autofix)
-			ptr+=descrLen;
-		else
-			ptr+=d->descriptor_length+2;
+		ptr+=descrLen;
+
 	}
 	ExtendedEventText=convertDVBUTF8((const unsigned char *)(ExtendedEventText.c_str()),ExtendedEventText.size());
 //	printf("[EITEvent]len=%d\t[N]%s\t[T]%s\n\t\%s\n",len,ShortEventName.c_str(),ShortEventText.c_str(),ExtendedEventText.c_str());
@@ -760,8 +772,8 @@ void EITEvent::init_EITEvent(const eit_event_struct *event, int tsidonid)
 }
 
 int EITEvent::getDescriptorLen(__u8* event,int len){
-	int nlen=event[1];
-	if(event[0]==DESCR_EXTENDED_EVENT || event[0]==DESCR_SHORT_EVENT){
+	int nlen=event[1]+2;
+	if(autofix && (event[0]==DESCR_EXTENDED_EVENT || event[0]==DESCR_SHORT_EVENT)){
 		__u8 *p;
 		nlen=5;
 		for(p=event+nlen; nlen<len; p++,nlen++){

@@ -2,10 +2,11 @@
 #include "lib/epg.h"
 #include "lib/estring.h"
 
-#define VERSION		"1.2.1"
+#define VERSION		"1.2.2"
 
 const char *months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug",
                             "Sep", "Oct", "Nov", "Dec"};
+int debug=0;
 
 int main(int argc,char ** argv)
 {
@@ -28,8 +29,10 @@ int main(int argc,char ** argv)
 		}
 		else if(strcmp(argv[i],"-d")==0 )
 			mode=1;
-		else if(strcmp(argv[i],"-dd")==0 )
+		else if(strcmp(argv[i],"-dd")==0 ){
 			mode=2;
+			debug=1;
+		}
 		else if(strcmp(argv[i],"-v7")==0 || strcmp(argv[i],"-v7be")==0  )
 			wmode=srGEMINI_EPGDAT_BE;
 		else if(strcmp(argv[i],"-v7le")==0 )

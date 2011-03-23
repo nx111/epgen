@@ -837,6 +837,8 @@ int epg::saveepg_to_xmltv(eString epgfile,int bomMode)
 				    desc2=desc.strReplace(chname.c_str(),"",UTF8_ENCODING).trim();
 				    desc=desc2;
 				}
+				desc.strReplace("<br>","",UTF8_ENCODING);
+				desc.strReplace("<BR>","",UTF8_ENCODING);
 			}
 
 			if(desc==".")
