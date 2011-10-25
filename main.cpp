@@ -2,7 +2,7 @@
 #include "lib/epg.h"
 #include "lib/estring.h"
 
-#define VERSION		"1.2.2"
+#define VERSION		"1.2.3"
 
 const char *months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug",
                             "Sep", "Oct", "Nov", "Dec"};

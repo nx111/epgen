@@ -1,4 +1,4 @@
-CC = gcc
+CC = g++
 CFLAGS = -Wno-deprecated -D_REENTRANT -D_GNU_SOURCE -fPIC
 LDFLAGS = -lstdc++
 

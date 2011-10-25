@@ -621,6 +621,8 @@ int epg::loadepg_from_xmltv(eString epgfile)
 	
 	map<__u16,eString> xmltvmap;
 	map<__u16,uniqueEPGKey> xmltv_tsonid_map;
+	set<eString> done_channels;
+	done_channels.clear();
 	
 	char temp[tempsize];
 	SP_XmlDomParser parser;
@@ -649,7 +651,6 @@ int epg::loadepg_from_xmltv(eString epgfile)
 			}
 		case SP_XmlNode::eELEMENT :{
 			const char *iname=((SP_XmlElementNode*)node)->getName();
-
 			//建立频道id映射表
 			if(strcmp(iname,"channel")==0){
 				const char* schannelid=((SP_XmlElementNode*)node)->getAttrValue("id");
@@ -657,12 +658,6 @@ int epg::loadepg_from_xmltv(eString epgfile)
 				int channelid=atoi(schannelid);
 				if(!channelid)continue;
 				
-				uniqueEPGKey tsonid;
-				if(stsonid)
-				   if(3==sscanf(stsonid,"0x%x:0x%x:0x%x",&tsonid.sid,&tsonid.onid,&tsonid.tsid) 
-				      || 3==sscanf(stsonid,"%d:%d:%d",&tsonid.sid,&tsonid.onid,&tsonid.tsid))
-					xmltv_tsonid_map[channelid]=tsonid;
-					
 				const SP_XmlNodeList * children=((SP_XmlElementNode*)node)->getChildren();
 				int childcount=children->getLength();
 				for(int j=0;j<childcount;j++){
@@ -675,7 +670,25 @@ int epg::loadepg_from_xmltv(eString epgfile)
 					else 
 						text="";
 					xmltvmap[channelid]=text;	
-				}			
+				}		
+				uniqueEPGKey tsonid;
+				if(stsonid)
+				   if(3==sscanf(stsonid,"0x%x:0x%x:0x%x",&tsonid.sid,&tsonid.onid,&tsonid.tsid) 
+				      || 3==sscanf(stsonid,"%d:%d:%d",&tsonid.sid,&tsonid.onid,&tsonid.tsid)){
+
+					xmltv_tsonid_map[channelid]=tsonid;
+
+					tvAllNameMap::iterator ait=tvamap.find(tsonid);
+					if(ait == tvamap.end())
+						tvamap[tsonid]=xmltvmap[channelid];
+
+					tvNameMap::iterator nit=tvnmap.find(xmltvmap[channelid]);
+					if(nit==tvnmap.end())
+						tvnmap[xmltvmap[channelid]]=tsonid;
+
+				   }
+
+					
 			}
 			else if(strcmp(iname,"programme")==0){	//EPG数据
 				const char* schannelid=((SP_XmlElementNode*)node)->getAttrValue("channel");
@@ -694,6 +707,9 @@ int epg::loadepg_from_xmltv(eString epgfile)
 				map<__u16,eString>::iterator xit=xmltvmap.find(channelid);
 				if(xit!=xmltvmap.end())
 					 chname=xit->second;
+
+				set<eString>::iterator itdone=done_channels.find(chname+sstart);
+				if(itdone != done_channels.end())continue;				
 
 				map<__u16,uniqueEPGKey>::iterator xkit=xmltv_tsonid_map.find(channelid);
 				if(xkit != xmltv_tsonid_map.end()){
@@ -732,8 +748,15 @@ int epg::loadepg_from_xmltv(eString epgfile)
 						}
 					}
 				if(eds.title.size() == 0)continue;
-				loadepg_from_event_struct(eds);
-				total++;
+				
+				tvAllNameMap::iterator ikey;
+				for(ikey=tvamap.begin();ikey != tvamap.end();ikey++){
+					if(ikey->second!=chname)continue;
+					eds.tsonid=ikey->first;
+					loadepg_from_event_struct(eds);	
+					total++;
+				}
+				done_channels.insert(chname+sstart);
 				}
 			}
 			break;		
